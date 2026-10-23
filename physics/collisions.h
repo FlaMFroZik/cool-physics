@@ -1,11 +1,11 @@
 #ifndef PHYSICS_COLLISIONS_H
 #define PHYSICS_COLLISIONS_H
 
-#include "physics.h"
+#include "physics/physics.h"
 
-/* Brute-force O(N^2) narrow phase: every body is tested against every
- * other body.  Overlaps are resolved with positional correction plus an
- * impulse along the contact normal (restitution taken from the world). */
+/* Uniform-grid broad phase (cell size = circle diameter 2*R) + narrow-phase
+ * impulse solver: for each circle, only circles in the same and 8 adjacent
+ * grid cells are tested for collision. */
 void phys_resolve_collisions(World *w);
 
 #endif /* PHYSICS_COLLISIONS_H */

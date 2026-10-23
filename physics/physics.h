@@ -5,6 +5,7 @@
 #include <stddef.h>
 
 #include "physics/body.h"
+#include "physics/grid.h"
 #include "physics/vec2.h"
 
 typedef enum GravityMode {
@@ -16,6 +17,9 @@ typedef struct World {
     Body  *bodies;
     size_t count;
     size_t capacity;
+
+    /* uniform spatial grid (cell size = ball diameter 2*R) */
+    Grid grid;
 
     GravityMode gravity_mode;
 
@@ -37,7 +41,9 @@ typedef struct World {
     phys_real time;              /* simulated time                    */
     size_t contacts_last_step;   /* collisions resolved in last step  */
     size_t contacts_total;
+    size_t pair_checks_last_step;/* candidate pairs checked in grid   */
     bool show_velocities;        /* render hint (toggled with V)      */
+    bool show_grid;              /* render spatial grid (toggled: B)  */
 
     /* interactive selection indices (-1 when none) */
     ptrdiff_t hovered_index;
@@ -54,7 +60,7 @@ ptrdiff_t phys_world_pick(const World *w, Vec2 point, phys_real extra_radius);
 Vec2      phys_world_clamp_pos(const World *w, Vec2 pos, phys_real radius);
 
 /* Advance the simulation by a fixed timestep dt (semi-implicit Euler:
- * forces -> velocities -> positions -> walls -> O(N^2) collisions). */
+ * forces -> velocities -> positions -> walls -> uniform-grid collisions). */
 void phys_world_step(World *w, phys_real dt);
 
 const char *phys_gravity_mode_name(GravityMode mode);

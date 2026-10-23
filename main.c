@@ -27,7 +27,7 @@ static void print_usage(const char *argv0)
     printf("  --scale X   initial time scale (default 1.0)\n");
     printf("\nmouse: LMB drag/create ball | RMB delete ball | MMB create ball\n");
     printf("keys : N/+ add ball | X/Del/- delete ball | C clear | R respawn\n");
-    printf("       SPACE pause | UP/DOWN time scale | V velocities | G walls | ESC quit\n");
+    printf("       SPACE pause | UP/DOWN time scale | V velocities | B grid | G walls | ESC quit\n");
 }
 
 int main(int argc, char **argv)
@@ -107,11 +107,12 @@ int main(int argc, char **argv)
            (int)(sizeof(long double) * 8));
     printf("bodies            : %zu (radius=%Lg)\n",
            app.world.count, app.ball_radius);
-    printf("collisions        : brute-force O(N^2), every pair\n");
+    printf("collisions        : uniform grid (cell=2*R=%Lg, 3x3 neighbours)\n",
+           (phys_real)2 * app.ball_radius);
     printf("timestep          : %Lg s (fixed, semi-implicit Euler)\n", SIM_DT);
     printf("mouse: LMB drag/create | RMB delete | MMB create\n");
     printf("keys : N/+ add | X/Del/- delete | C clear | SPACE pause | "
-           "R respawn | UP/DOWN time | V vel | G walls | ESC quit\n\n");
+           "R respawn | UP/DOWN time | V vel | B grid | G walls | ESC quit\n\n");
 
     app.last_frame = glfwGetTime();
     app.fps_clock  = app.last_frame;
@@ -148,11 +149,11 @@ int main(int argc, char **argv)
             app.fps_frames = 0;
             app.fps_clock  = now;
             printf("\r[%s] bodies=%zu fps=%5.1f t=%8.2Lf "
-                   "collisions/step=%4zu total=%-9zu scale=%4.2f%s   ",
+                   "checks/step=%4zu collisions/step=%4zu total=%-9zu scale=%4.2f%s   ",
                    phys_gravity_mode_name(APP_MODE), app.world.count, fps,
-                   app.world.time, app.world.contacts_last_step,
-                   app.world.contacts_total, (double)app.time_scale,
-                   app.paused ? "  [PAUSED]" : "");
+                   app.world.time, app.world.pair_checks_last_step,
+                   app.world.contacts_last_step, app.world.contacts_total,
+                   (double)app.time_scale, app.paused ? "  [PAUSED]" : "");
             fflush(stdout);
         }
     }
