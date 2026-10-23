@@ -1,5 +1,5 @@
 /*
- * render.c — turns the long-double World into OpenGL draw calls and
+ * render.c — turns the World into OpenGL draw calls and
  * fits the world's view rectangle into the window (letterboxed).
  */
 #include "render/render.h"

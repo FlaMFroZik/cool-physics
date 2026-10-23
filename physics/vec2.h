@@ -4,15 +4,12 @@
 #include <math.h>
 
 /*
- * Every simulation quantity is stored and computed in `long double`
- * (80-bit extended precision on x86-64 Linux) so that the integrator
- * and the collision solver keep as much precision as the C compiler
- * can give us.  Values are converted down to float/double only at the
- * rendering boundary.
+ * Every simulation quantity is stored and computed in `double`
+ * (64-bit IEEE-754 floating point, hardware SSE/AVX accelerated).
  */
-typedef long double phys_real;
+typedef double phys_real;
 
-#define PHYS_PI ((phys_real)3.14159265358979323846264338327950288L)
+#define PHYS_PI ((phys_real)3.14159265358979323846)
 
 /* 2D vector in physics precision. */
 typedef struct Vec2 {
@@ -54,7 +51,7 @@ static inline phys_real vec2_len_sq(Vec2 a)
 
 static inline phys_real vec2_len(Vec2 a)
 {
-    return sqrtl(vec2_len_sq(a));
+    return sqrt(vec2_len_sq(a));
 }
 
 static inline phys_real vec2_dist_sq(Vec2 a, Vec2 b)

@@ -40,7 +40,7 @@ static bool resolve_pair(const World *w, Body *a, Body *b,
         dist_sq = vec2_len_sq(d);
     }
 
-    phys_real dist = sqrtl(dist_sq);
+    phys_real dist = sqrt(dist_sq);
     Vec2 n = vec2_scale(d, (phys_real)1 / dist);
 
     /* --- positional correction: push the pair apart -------- */
