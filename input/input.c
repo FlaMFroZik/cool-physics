@@ -176,6 +176,9 @@ static void on_key(GLFWwindow *window, int key, int scancode, int action,
     case GLFW_KEY_V:
         app->world.show_velocities = !app->world.show_velocities;
         break;
+    case GLFW_KEY_B:
+        app->world.show_grid = !app->world.show_grid;
+        break;
     case GLFW_KEY_G:
         app->world.walls_enabled = !app->world.walls_enabled;
         break;

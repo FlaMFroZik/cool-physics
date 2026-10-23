@@ -41,6 +41,7 @@ SOURCES = \
 	util/rng.c \
 	util/color.c \
 	physics/body.c \
+	physics/grid.c \
 	physics/physics.c \
 	physics/gravity.c \
 	physics/collisions.c \

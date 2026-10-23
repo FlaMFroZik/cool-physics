@@ -11,6 +11,7 @@
 void phys_world_init(World *w, GravityMode mode)
 {
     memset(w, 0, sizeof(*w));
+    grid_init(&w->grid);
     w->gravity_mode     = mode;
     w->restitution      = (phys_real)0.85;
     w->wall_restitution = (phys_real)0.80;
@@ -46,6 +47,7 @@ void phys_world_init(World *w, GravityMode mode)
 
 void phys_world_free(World *w)
 {
+    grid_free(&w->grid);
     free(w->bodies);
     w->bodies        = NULL;
     w->count         = 0;
@@ -56,12 +58,13 @@ void phys_world_free(World *w)
 
 void phys_world_clear(World *w)
 {
-    w->count              = 0;
-    w->time               = 0;
-    w->contacts_last_step = 0;
-    w->contacts_total     = 0;
-    w->hovered_index      = -1;
-    w->dragged_index      = -1;
+    w->count                 = 0;
+    w->time                  = 0;
+    w->contacts_last_step    = 0;
+    w->contacts_total        = 0;
+    w->pair_checks_last_step = 0;
+    w->hovered_index         = -1;
+    w->dragged_index         = -1;
 }
 
 Body *phys_world_add(World *w, const Body *b)
