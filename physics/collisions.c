@@ -4,9 +4,16 @@
  * bodies and a perfect baseline to later compare spatial hashing or
  * sweep-and-prune against.
  */
-#include "collisions.h"
+#include "physics/collisions.h"
 
 #include <math.h>
+
+static phys_real body_inv_mass(const Body *b)
+{
+    if (b->dragged || b->mass <= (phys_real)0)
+        return (phys_real)0;
+    return (phys_real)1 / b->mass;
+}
 
 void phys_resolve_collisions(World *w)
 {
@@ -17,16 +24,14 @@ void phys_resolve_collisions(World *w)
 
     for (size_t i = 0; i < w->count; i++) {
         Body *a = &w->bodies[i];
-        phys_real inv_ma = (a->mass > (phys_real)0)
-                               ? (phys_real)1 / a->mass : (phys_real)0;
+        phys_real inv_ma = body_inv_mass(a);
 
         for (size_t j = i + 1; j < w->count; j++) {
             Body *b = &w->bodies[j];
-            phys_real inv_mb = (b->mass > (phys_real)0)
-                                   ? (phys_real)1 / b->mass : (phys_real)0;
+            phys_real inv_mb  = body_inv_mass(b);
             phys_real inv_sum = inv_ma + inv_mb;
             if (inv_sum <= (phys_real)0)
-                continue; /* two static bodies */
+                continue; /* two static/dragged bodies */
 
             Vec2 d = vec2_sub(b->pos, a->pos);
             phys_real radius_sum = a->radius + b->radius;
@@ -52,7 +57,7 @@ void phys_resolve_collisions(World *w)
             }
 
             /* --- impulse only if the bodies approach each other ---- */
-            Vec2 rel_vel   = vec2_sub(b->vel, a->vel);
+            Vec2 rel_vel    = vec2_sub(b->vel, a->vel);
             phys_real vel_n = vec2_dot(rel_vel, n);
             if (vel_n < (phys_real)0) {
                 phys_real impulse = -((phys_real)1 + w->restitution) * vel_n

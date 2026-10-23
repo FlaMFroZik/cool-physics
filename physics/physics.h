@@ -1,53 +1,16 @@
 #ifndef PHYSICS_H
 #define PHYSICS_H
 
-#include <math.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-/*
- * cool-physics — physics core.
- *
- * Every simulation quantity is stored and computed in `long double`
- * (80-bit extended precision on x86-64 Linux) so that the integrator
- * and the collision solver keep as much precision as the C compiler
- * can give us.  Values are converted down to float/double only at the
- * rendering boundary.
- */
-
-typedef long double phys_real;
-
-/* 2D vector in physics precision. */
-typedef struct Vec2 {
-    phys_real x, y;
-} Vec2;
-
-static inline Vec2 vec2_make(phys_real x, phys_real y) { Vec2 v; v.x = x; v.y = y; return v; }
-static inline Vec2 vec2_add(Vec2 a, Vec2 b)  { return vec2_make(a.x + b.x, a.y + b.y); }
-static inline Vec2 vec2_sub(Vec2 a, Vec2 b)  { return vec2_make(a.x - b.x, a.y - b.y); }
-static inline Vec2 vec2_scale(Vec2 a, phys_real s) { return vec2_make(a.x * s, a.y * s); }
-static inline phys_real vec2_dot(Vec2 a, Vec2 b)   { return a.x * b.x + a.y * b.y; }
-static inline phys_real vec2_len_sq(Vec2 a)        { return vec2_dot(a, a); }
-static inline phys_real vec2_len(Vec2 a)           { return sqrtl(vec2_len_sq(a)); }
-static inline Vec2 vec2_norm(Vec2 a)
-{
-    phys_real len = vec2_len(a);
-    return (len > (phys_real)0) ? vec2_scale(a, (phys_real)1 / len) : vec2_make(0, 0);
-}
+#include "physics/body.h"
+#include "physics/vec2.h"
 
 typedef enum GravityMode {
     GRAV_CONSTANT = 0,  /* uniform gravitational field (balls in a box) */
     GRAV_NEWTON   = 1   /* pairwise Newtonian attraction (N-body)       */
 } GravityMode;
-
-typedef struct Body {
-    Vec2 pos;
-    Vec2 vel;
-    Vec2 force;        /* force accumulator for the current step      */
-    phys_real mass;    /* <= 0 => static body (never integrated)      */
-    phys_real radius;
-    float color[3];    /* render-side, regular float precision        */
-} Body;
 
 typedef struct World {
     Body  *bodies;
@@ -75,13 +38,20 @@ typedef struct World {
     size_t contacts_last_step;   /* collisions resolved in last step  */
     size_t contacts_total;
     bool show_velocities;        /* render hint (toggled with V)      */
+
+    /* interactive selection indices (-1 when none) */
+    ptrdiff_t hovered_index;
+    ptrdiff_t dragged_index;
 } World;
 
 void phys_world_init(World *w, GravityMode mode);
 void phys_world_free(World *w);
 void phys_world_clear(World *w);
 
-Body *phys_world_add(World *w, const Body *b);
+Body     *phys_world_add(World *w, const Body *b);
+bool      phys_world_remove_at(World *w, size_t index);
+ptrdiff_t phys_world_pick(const World *w, Vec2 point, phys_real extra_radius);
+Vec2      phys_world_clamp_pos(const World *w, Vec2 pos, phys_real radius);
 
 /* Advance the simulation by a fixed timestep dt (semi-implicit Euler:
  * forces -> velocities -> positions -> walls -> O(N^2) collisions). */
