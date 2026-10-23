@@ -28,6 +28,9 @@
 #define SIM_DT              (BASE_TICK_DT / (phys_real)DEFAULT_SUBTICKS)
 #define MAX_STEPS_PER_FRAME 64
 
+#define MIN_BALL_RADIUS     ((phys_real)0.25)
+#define MAX_BALL_RADIUS     ((phys_real)25.0)
+
 #if defined(SIM_CONSTANT)
 #define DEFAULT_BODIES 140
 #else
@@ -42,6 +45,7 @@ typedef struct App {
     size_t    subticks;        /* physics sub-ticks per 60 Hz base tick */
     phys_real sub_dt;          /* BASE_TICK_DT / subticks               */
     phys_real ball_radius;     /* uniform ball radius for this scene    */
+    bool      custom_radius;   /* true if user set a custom ball radius */
     size_t    next_color_idx;  /* palette index for newly spawned balls */
 
     Rng       rng;

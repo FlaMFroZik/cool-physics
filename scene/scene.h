@@ -8,6 +8,9 @@
 /* Populate (or reset) the initial scene for the active gravity mode. */
 void  scene_spawn(App *app);
 
+/* Set the uniform ball radius (clamped) and resize all existing balls. */
+void  scene_set_ball_radius(App *app, phys_real radius);
+
 /* Create a new ball of the scene's uniform radius at `pos` with `vel`. */
 Body *scene_spawn_ball(App *app, Vec2 pos, Vec2 vel);
 

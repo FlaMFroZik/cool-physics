@@ -1,6 +1,6 @@
 /*
- * scene.c — initial scene generation and runtime ball creation/deletion
- * for both constant-gravity and Newtonian N-body modes.
+ * scene.c — initial scene generation, ball size adjustment, and runtime
+ * ball creation/deletion for both constant-gravity and Newtonian modes.
  */
 #include "scene/scene.h"
 
@@ -47,8 +47,10 @@ void scene_spawn(App *app)
 
     double dx = 0.0, dy = 0.0;
     size_t cols = 1;
-    app->ball_radius = compute_constant_ball_radius(w, app->body_count,
+    phys_real auto_r = compute_constant_ball_radius(w, app->body_count,
                                                     &dx, &dy, &cols);
+    if (!app->custom_radius || app->ball_radius <= (phys_real)0)
+        app->ball_radius = auto_r;
 
     size_t n = app->body_count;
     if (n == 0)
@@ -69,6 +71,8 @@ void scene_spawn(App *app)
                                (phys_real)rng_range(&app->rng, -3.0, 3.0));
         scene_spawn_ball(app, pos, vel);
     }
+
+    grid_build(&w->grid, w->bodies, w->count, w->world_min, w->world_max);
 }
 
 #else /* GRAV_NEWTON */
@@ -80,14 +84,15 @@ void scene_spawn(App *app)
     phys_world_clear(w);
     app->next_color_idx = 0;
 
-    static const phys_real BALL_RADIUS = (phys_real)2.5;
-    app->ball_radius = BALL_RADIUS;
+    static const phys_real DEFAULT_BALL_RADIUS = (phys_real)2.5;
+    if (!app->custom_radius || app->ball_radius <= (phys_real)0)
+        app->ball_radius = DEFAULT_BALL_RADIUS;
 
     size_t n = app->body_count;
     if (n == 0)
         return;
 
-    const phys_real ball_mass = PHYS_PI * BALL_RADIUS * BALL_RADIUS;
+    const phys_real ball_mass = PHYS_PI * app->ball_radius * app->ball_radius;
 
     Vec2 center_pos      = vec2_make(0, 0);
     Vec2 total_momentum  = vec2_make(0, 0);
@@ -124,9 +129,33 @@ void scene_spawn(App *app)
             w->bodies[i].vel = vec2_sub(w->bodies[i].vel, com_vel);
         }
     }
+
+    grid_build(&w->grid, w->bodies, w->count, w->world_min, w->world_max);
 }
 
 #endif
+
+void scene_set_ball_radius(App *app, phys_real radius)
+{
+    if (radius < MIN_BALL_RADIUS)
+        radius = MIN_BALL_RADIUS;
+    if (radius > MAX_BALL_RADIUS)
+        radius = MAX_BALL_RADIUS;
+
+    app->ball_radius   = radius;
+    app->custom_radius = true;
+
+    World *w = &app->world;
+    phys_real mass = PHYS_PI * radius * radius;
+    for (size_t i = 0; i < w->count; i++) {
+        w->bodies[i].radius = radius;
+        w->bodies[i].mass   = mass;
+        w->bodies[i].pos    = phys_world_clamp_pos(w, w->bodies[i].pos, radius);
+    }
+
+    if (w->count > 0)
+        grid_build(&w->grid, w->bodies, w->count, w->world_min, w->world_max);
+}
 
 Body *scene_spawn_ball(App *app, Vec2 pos, Vec2 vel)
 {

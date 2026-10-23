@@ -21,15 +21,17 @@ static void print_usage(const char *argv0)
 {
     printf("cool-physics — 2D physics sandbox in long double (%s build)\n\n",
            phys_gravity_mode_name(APP_MODE));
-    printf("usage: %s [-n bodies] [-s subticks] [--seed S] [--scale X] [-h]\n",
+    printf("usage: %s [-n bodies] [-r radius] [-s subticks] [--seed S] [--scale X] [-h]\n",
            argv0);
     printf("  -n, --bodies N     number of balls (default %d)\n", DEFAULT_BODIES);
+    printf("  -r, --radius R     ball radius (%Lg..%Lg, default: auto)\n",
+           MIN_BALL_RADIUS, MAX_BALL_RADIUS);
     printf("  -s, --subticks N   physics sub-ticks per 60 Hz tick (default %d)\n",
            DEFAULT_SUBTICKS);
     printf("  --seed S           RNG seed for the scene (default: time)\n");
     printf("  --scale X          initial time scale (default 1.0)\n");
-    printf("\nmouse: LMB drag/create ball | RMB delete ball | MMB create ball\n");
-    printf("keys : N/+ add ball | X/Del/- delete ball | C clear | R respawn\n");
+    printf("\nmouse: LMB drag/create | RMB delete | MMB create | WHEEL resize balls\n");
+    printf("keys : N/+ add | X/Del/- delete | , / . resize balls | C clear | R respawn\n");
     printf("       [ / ] sub-ticks | SPACE pause | UP/DOWN time scale | "
            "V velocities | B grid | G walls | ESC quit\n");
 }
@@ -41,6 +43,7 @@ int main(int argc, char **argv)
 
     size_t   bodies   = DEFAULT_BODIES;
     size_t   subticks = DEFAULT_SUBTICKS;
+    double   radius   = 0.0;
     uint64_t seed     = (uint64_t)time(NULL);
     double   scale    = 1.0;
 
@@ -48,6 +51,16 @@ int main(int argc, char **argv)
         if ((!strcmp(argv[i], "-n") || !strcmp(argv[i], "--bodies")) &&
             i + 1 < argc) {
             bodies = strtoul(argv[++i], NULL, 10);
+        } else if ((!strcmp(argv[i], "-r") || !strcmp(argv[i], "--radius") ||
+                    !strcmp(argv[i], "--size")) &&
+                   i + 1 < argc) {
+            radius = strtod(argv[++i], NULL);
+            if (radius < (double)MIN_BALL_RADIUS ||
+                radius > (double)MAX_BALL_RADIUS) {
+                fprintf(stderr, "invalid ball radius (must be %Lg..%Lg)\n",
+                        MIN_BALL_RADIUS, MAX_BALL_RADIUS);
+                return 2;
+            }
         } else if ((!strcmp(argv[i], "-s") || !strcmp(argv[i], "--subticks") ||
                     !strcmp(argv[i], "--substeps")) &&
                    i + 1 < argc) {
@@ -76,6 +89,10 @@ int main(int argc, char **argv)
 
     app.body_count = bodies;
     app.time_scale = (phys_real)scale;
+    if (radius > 0.0) {
+        app.ball_radius   = (phys_real)radius;
+        app.custom_radius = true;
+    }
     app_set_subticks(&app, subticks);
     rng_seed(&app.rng, seed);
 
@@ -127,9 +144,9 @@ int main(int argc, char **argv)
            (phys_real)2 * app.ball_radius);
     printf("sub-ticks         : %zu per 60 Hz tick (dt = %Lg s, %.0Lf Hz)\n",
            app.subticks, app.sub_dt, (phys_real)1 / app.sub_dt);
-    printf("mouse: LMB drag/create | RMB delete | MMB create\n");
-    printf("keys : N/+ add | X/Del/- delete | C clear | [ / ] sub-ticks | "
-           "SPACE pause | R respawn | UP/DOWN time | V vel | B grid | G walls | ESC quit\n\n");
+    printf("mouse: LMB drag/create | RMB delete | MMB create | WHEEL resize\n");
+    printf("keys : N/+ add | X/Del/- delete | , / . resize | C clear | [ / ] sub-ticks\n");
+    printf("       SPACE pause | R respawn | UP/DOWN time | V vel | B grid | G walls | ESC quit\n\n");
 
     app.last_frame = glfwGetTime();
     app.fps_clock  = app.last_frame;
@@ -167,10 +184,10 @@ int main(int argc, char **argv)
             double fps = (double)app.fps_frames / (now - app.fps_clock);
             app.fps_frames = 0;
             app.fps_clock  = now;
-            printf("\r[%s] bodies=%zu subticks=%zu fps=%5.1f t=%8.2Lf "
+            printf("\r[%s] bodies=%zu r=%.2Lf subticks=%zu fps=%5.1f t=%8.2Lf "
                    "checks/step=%4zu collisions/step=%4zu total=%-9zu scale=%4.2f%s   ",
                    phys_gravity_mode_name(APP_MODE), app.world.count,
-                   app.subticks, fps, app.world.time,
+                   app.ball_radius, app.subticks, fps, app.world.time,
                    app.world.pair_checks_last_step,
                    app.world.contacts_last_step, app.world.contacts_total,
                    (double)app.time_scale, app.paused ? "  [PAUSED]" : "");
