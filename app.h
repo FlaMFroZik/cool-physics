@@ -26,7 +26,7 @@
 #define DEFAULT_SUBTICKS    4                              /* default sub-ticks per 60 Hz tick (240 Hz) */
 #define MAX_SUBTICKS        4096
 #define SIM_DT              (BASE_TICK_DT / (phys_real)DEFAULT_SUBTICKS)
-#define MAX_STEPS_PER_FRAME 64
+#define MAX_STEPS_PER_FRAME 4
 
 #define MIN_BALL_RADIUS     ((phys_real)0.25)
 #define MAX_BALL_RADIUS     ((phys_real)25.0)

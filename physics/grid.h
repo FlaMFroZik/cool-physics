@@ -27,10 +27,12 @@ typedef struct Grid {
 
     ptrdiff_t *cells;         /* head body index per cell (-1 if empty)  */
     size_t     cells_cap;
+    size_t     cells_init;    /* number of cells already initialized -1  */
 
     ptrdiff_t *next;          /* next body index in the same cell (-1)   */
     int       *body_cell;     /* cell index (cy * cols + cx) per body    */
     size_t     body_cap;
+    size_t     prev_count;    /* number of bodies from previous build    */
 } Grid;
 
 void grid_init(Grid *g);
