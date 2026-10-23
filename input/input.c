@@ -173,6 +173,14 @@ static void on_key(GLFWwindow *window, int key, int scancode, int action,
         if (app->time_scale < (phys_real)0.0625)
             app->time_scale = (phys_real)0.0625;
         break;
+    case GLFW_KEY_LEFT_BRACKET:
+        if (app->subticks > 1)
+            app_set_subticks(app, app->subticks - 1);
+        break;
+    case GLFW_KEY_RIGHT_BRACKET:
+        if (app->subticks < MAX_SUBTICKS)
+            app_set_subticks(app, app->subticks + 1);
+        break;
     case GLFW_KEY_V:
         app->world.show_velocities = !app->world.show_velocities;
         break;
