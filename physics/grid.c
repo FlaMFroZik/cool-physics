@@ -22,16 +22,22 @@ void grid_free(Grid *g)
 
 static bool ensure_cells_capacity(Grid *g, size_t needed)
 {
-    if (needed <= g->cells_cap)
-        return true;
-    size_t new_cap = g->cells_cap ? g->cells_cap : 1024;
-    while (new_cap < needed)
-        new_cap *= 2;
-    ptrdiff_t *mem = realloc(g->cells, new_cap * sizeof(*mem));
-    if (!mem)
-        return false;
-    g->cells     = mem;
-    g->cells_cap = new_cap;
+    if (needed > g->cells_cap) {
+        size_t new_cap = g->cells_cap ? g->cells_cap : 1024;
+        while (new_cap < needed)
+            new_cap *= 2;
+        ptrdiff_t *mem = realloc(g->cells, new_cap * sizeof(*mem));
+        if (!mem)
+            return false;
+        g->cells     = mem;
+        g->cells_cap = new_cap;
+    }
+    /* Initialize any newly exposed cells to -1 once. */
+    if (needed > g->cells_init) {
+        for (size_t c = g->cells_init; c < needed; c++)
+            g->cells[c] = -1;
+        g->cells_init = needed;
+    }
     return true;
 }
 
@@ -77,6 +83,14 @@ void grid_cell_coords(const Grid *g, Vec2 pos, int *out_cx, int *out_cy)
 bool grid_build(Grid *g, const Body *bodies, size_t count,
                 Vec2 world_min, Vec2 world_max)
 {
+    /* O(N) reset of only the cells occupied during the previous build. */
+    for (size_t i = 0; i < g->prev_count; i++) {
+        int c = g->body_cell[i];
+        if (c >= 0 && (size_t)c < g->cells_init)
+            g->cells[c] = -1;
+    }
+    g->prev_count = 0;
+
     /* Determine circle size (diameter = 2 * max_radius). */
     phys_real max_r = (phys_real)0;
     for (size_t i = 0; i < count; i++) {
@@ -128,9 +142,6 @@ bool grid_build(Grid *g, const Body *bodies, size_t count,
     g->cols          = cols;
     g->rows          = rows;
 
-    for (size_t c = 0; c < total_cells; c++)
-        g->cells[c] = -1;
-
     for (size_t i = 0; i < count; i++) {
         int cx = 0, cy = 0;
         grid_cell_coords(g, bodies[i].pos, &cx, &cy);
@@ -139,6 +150,7 @@ bool grid_build(Grid *g, const Body *bodies, size_t count,
         g->next[i]      = g->cells[cell];
         g->cells[cell]  = (ptrdiff_t)i;
     }
+    g->prev_count = count;
 
     return true;
 }

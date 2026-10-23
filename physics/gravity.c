@@ -18,19 +18,41 @@ static void apply_constant_gravity(World *w)
  * F = G * ma * mb * d / (|d|^2 + eps^2)^{3/2}. */
 static void apply_newton_gravity(World *w)
 {
-    for (size_t i = 0; i < w->count; i++) {
-        Body *a = &w->bodies[i];
-        for (size_t j = i + 1; j < w->count; j++) {
-            Body *b = &w->bodies[j];
-            Vec2 d  = vec2_sub(b->pos, a->pos);
-            phys_real r2    = vec2_len_sq(d) + w->softening_sq;
+    const size_t    n    = w->count;
+    Body *const     bods = w->bodies;
+    const phys_real G    = w->G;
+    const phys_real eps2 = w->softening_sq;
+
+    for (size_t i = 0; i < n; i++) {
+        Body *a              = &bods[i];
+        const phys_real ax   = a->pos.x;
+        const phys_real ay   = a->pos.y;
+        const phys_real g_ma = G * a->mass;
+        const bool a_dragged = a->dragged;
+        phys_real fax        = (phys_real)0;
+        phys_real fay        = (phys_real)0;
+
+        for (size_t j = i + 1; j < n; j++) {
+            Body *b         = &bods[j];
+            phys_real dx    = b->pos.x - ax;
+            phys_real dy    = b->pos.y - ay;
+            phys_real r2    = dx * dx + dy * dy + eps2;
             phys_real inv_r = (phys_real)1 / sqrtl(r2);
-            phys_real s     = w->G * a->mass * b->mass * inv_r * inv_r * inv_r;
-            Vec2 f          = vec2_scale(d, s);
-            if (!a->dragged)
-                a->force = vec2_add(a->force, f);
-            if (!b->dragged)
-                b->force = vec2_sub(b->force, f);
+            phys_real s     = g_ma * b->mass * inv_r * inv_r * inv_r;
+            phys_real fx    = dx * s;
+            phys_real fy    = dy * s;
+
+            fax += fx;
+            fay += fy;
+            if (!b->dragged) {
+                b->force.x -= fx;
+                b->force.y -= fy;
+            }
+        }
+
+        if (!a_dragged) {
+            a->force.x += fax;
+            a->force.y += fay;
         }
     }
 }
