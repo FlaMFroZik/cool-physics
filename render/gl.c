@@ -1,4 +1,4 @@
-#include "gl.h"
+#include "render/gl.h"
 
 #include <math.h>
 
@@ -33,6 +33,22 @@ void rgl_draw_circle(double cx, double cy, double radius,
     glBegin(GL_TRIANGLE_FAN);
     glVertex2d(cx, cy);
     for (int i = 0; i <= segments; i++) {
+        double a = 2.0 * RGL_PI * (double)i / (double)segments;
+        glVertex2d(cx + radius * cos(a), cy + radius * sin(a));
+    }
+    glEnd();
+}
+
+void rgl_draw_circle_outline(double cx, double cy, double radius,
+                             const float rgb[3], int segments,
+                             float line_width)
+{
+    if (segments < 8)
+        segments = 8;
+    glColor3f(rgb[0], rgb[1], rgb[2]);
+    glLineWidth(line_width);
+    glBegin(GL_LINE_LOOP);
+    for (int i = 0; i < segments; i++) {
         double a = 2.0 * RGL_PI * (double)i / (double)segments;
         glVertex2d(cx + radius * cos(a), cy + radius * sin(a));
     }

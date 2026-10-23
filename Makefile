@@ -36,7 +36,19 @@ NEWTON_FLAGS = -DSIM_NEWTON=1
 CONST_EXE  = bin/cool-physics-const
 NEWTON_EXE = bin/cool-physics-newton
 
-SOURCES = main.c render/render.c render/gl.c physics/physics.c physics/collisions.c
+SOURCES = \
+	main.c \
+	util/rng.c \
+	util/color.c \
+	physics/body.c \
+	physics/physics.c \
+	physics/gravity.c \
+	physics/collisions.c \
+	scene/scene.c \
+	input/input.c \
+	render/gl.c \
+	render/camera.c \
+	render/render.c
 
 CONST_OBJ  = $(addprefix build/const/,  $(SOURCES:.c=.o))
 NEWTON_OBJ = $(addprefix build/newton/, $(SOURCES:.c=.o))
@@ -76,6 +88,6 @@ run: $(RUN_EXE)
 clean:
 	rm -rf build bin
 
--include $(wildcard build/*/*.d)
+-include $(wildcard build/*/*.d build/*/*/*.d)
 
 .PHONY: all const newton run clean
