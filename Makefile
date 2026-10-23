@@ -1,4 +1,4 @@
-# cool-physics — 2D physics sandbox (long double, GLFW + OpenGL)
+# cool-physics — 2D physics sandbox (double, GLFW + OpenGL)
 #
 # The simulation flavour is chosen at compile time:
 #

@@ -37,7 +37,7 @@ static void apply_newton_gravity(World *w)
             phys_real dx    = b->pos.x - ax;
             phys_real dy    = b->pos.y - ay;
             phys_real r2    = dx * dx + dy * dy + eps2;
-            phys_real inv_r = (phys_real)1 / sqrtl(r2);
+            phys_real inv_r = (phys_real)1 / sqrt(r2);
             phys_real s     = g_ma * b->mass * inv_r * inv_r * inv_r;
             phys_real fx    = dx * s;
             phys_real fy    = dy * s;

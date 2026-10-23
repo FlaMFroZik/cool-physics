@@ -19,12 +19,12 @@
 
 static void print_usage(const char *argv0)
 {
-    printf("cool-physics — 2D physics sandbox in long double (%s build)\n\n",
+    printf("cool-physics — 2D physics sandbox in double (%s build)\n\n",
            phys_gravity_mode_name(APP_MODE));
     printf("usage: %s [-n bodies] [-r radius] [-s subticks] [--seed S] [--scale X] [-h]\n",
            argv0);
     printf("  -n, --bodies N     number of balls (default %d)\n", DEFAULT_BODIES);
-    printf("  -r, --radius R     ball radius (%Lg..%Lg, default: auto)\n",
+    printf("  -r, --radius R     ball radius (%g..%g, default: auto)\n",
            MIN_BALL_RADIUS, MAX_BALL_RADIUS);
     printf("  -s, --subticks N   physics sub-ticks per 60 Hz tick (default %d)\n",
            DEFAULT_SUBTICKS);
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
             radius = strtod(argv[++i], NULL);
             if (radius < (double)MIN_BALL_RADIUS ||
                 radius > (double)MAX_BALL_RADIUS) {
-                fprintf(stderr, "invalid ball radius (must be %Lg..%Lg)\n",
+                fprintf(stderr, "invalid ball radius (must be %g..%g)\n",
                         MIN_BALL_RADIUS, MAX_BALL_RADIUS);
                 return 2;
             }
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
     }
 
     char title[128];
-    snprintf(title, sizeof(title), "cool-physics — %s [long double]",
+    snprintf(title, sizeof(title), "cool-physics — %s [double]",
              phys_gravity_mode_name(APP_MODE));
 
     glfwWindowHint(GLFW_SAMPLES, 4);
@@ -136,13 +136,13 @@ int main(int argc, char **argv)
     render_resize(fbw, fbh);
 
     printf("cool-physics  [%s]\n", phys_gravity_mode_name(APP_MODE));
-    printf("physics precision : long double (%d-bit)\n",
-           (int)(sizeof(long double) * 8));
-    printf("bodies            : %zu (radius=%Lg)\n",
+    printf("physics precision : double (%d-bit)\n",
+           (int)(sizeof(phys_real) * 8));
+    printf("bodies            : %zu (radius=%g)\n",
            app.world.count, app.ball_radius);
-    printf("collisions        : uniform grid (cell=2*R=%Lg, 3x3 neighbours)\n",
+    printf("collisions        : uniform grid (cell=2*R=%g, 3x3 neighbours)\n",
            (phys_real)2 * app.ball_radius);
-    printf("sub-ticks         : %zu per 60 Hz tick (dt = %Lg s, %.0Lf Hz)\n",
+    printf("sub-ticks         : %zu per 60 Hz tick (dt = %g s, %.0f Hz)\n",
            app.subticks, app.sub_dt, (phys_real)1 / app.sub_dt);
     printf("mouse: LMB drag/create | RMB delete | MMB create | WHEEL resize\n");
     printf("keys : N/+ add | X/Del/- delete | , / . resize | C clear | [ / ] sub-ticks\n");
@@ -184,7 +184,7 @@ int main(int argc, char **argv)
             double fps = (double)app.fps_frames / (now - app.fps_clock);
             app.fps_frames = 0;
             app.fps_clock  = now;
-            printf("\r[%s] bodies=%zu r=%.2Lf subticks=%zu fps=%5.1f t=%8.2Lf "
+            printf("\r[%s] bodies=%zu r=%.2f subticks=%zu fps=%5.1f t=%8.2f "
                    "checks/step=%4zu collisions/step=%4zu total=%-9zu scale=%4.2f%s   ",
                    phys_gravity_mode_name(APP_MODE), app.world.count,
                    app.ball_radius, app.subticks, fps, app.world.time,

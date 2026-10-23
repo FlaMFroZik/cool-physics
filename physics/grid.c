@@ -68,8 +68,8 @@ void grid_cell_coords(const Grid *g, Vec2 pos, int *out_cx, int *out_cy)
     phys_real fx = (pos.x - g->origin.x) * g->inv_cell_size;
     phys_real fy = (pos.y - g->origin.y) * g->inv_cell_size;
 
-    int cx = (int)floorl(fx);
-    int cy = (int)floorl(fy);
+    int cx = (int)floor(fx);
+    int cy = (int)floor(fy);
 
     if (cx < 0)        cx = 0;
     if (cx >= g->cols) cx = g->cols - 1;
@@ -123,8 +123,8 @@ bool grid_build(Grid *g, const Body *bodies, size_t count,
     if (width  < cell_size) width  = cell_size;
     if (height < cell_size) height = cell_size;
 
-    int cols = (int)ceill(width  / cell_size);
-    int rows = (int)ceill(height / cell_size);
+    int cols = (int)ceil(width  / cell_size);
+    int rows = (int)ceil(height / cell_size);
     if (cols < 1)            cols = 1;
     if (rows < 1)            rows = 1;
     if (cols > GRID_MAX_DIM) cols = GRID_MAX_DIM;
