@@ -6,11 +6,13 @@
  *   - Left click on empty space   : create a new ball (drag to position/throw)
  *   - Middle click or N / +       : spawn a new ball at the cursor
  *   - Right click (or drag)       : delete the ball under the cursor
+ *   - Mouse wheel or , / . (< >)  : decrease / increase ball size
  *   - X / Delete / Backspace / -  : delete hovered ball (or last ball)
  *   - C                           : clear all balls
  */
 #include "input/input.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -41,7 +43,7 @@ static void begin_drag(App *app, size_t idx)
     if (idx >= w->count)
         return;
     release_drag(app);
-    w->dragged_index      = (ptrdiff_t)idx;
+    w->dragged_index       = (ptrdiff_t)idx;
     w->bodies[idx].dragged = true;
     w->bodies[idx].vel     = vec2_make(0, 0);
     app->drag_offset       = vec2_sub(w->bodies[idx].pos, app->cursor_world);
@@ -122,6 +124,17 @@ static void on_mouse_button(GLFWwindow *window, int button, int action, int mods
     w->hovered_index = phys_world_pick(w, app->cursor_world, (phys_real)0.5);
 }
 
+static void on_scroll(GLFWwindow *window, double xoffset, double yoffset)
+{
+    (void)xoffset;
+    App *app = glfwGetWindowUserPointer(window);
+    if (!app || yoffset == 0.0)
+        return;
+
+    phys_real factor = (phys_real)pow(1.10, yoffset);
+    scene_set_ball_radius(app, app->ball_radius * factor);
+}
+
 static void on_key(GLFWwindow *window, int key, int scancode, int action,
                    int mods)
 {
@@ -162,6 +175,14 @@ static void on_key(GLFWwindow *window, int key, int scancode, int action,
         break;
     case GLFW_KEY_C:
         phys_world_clear(&app->world);
+        break;
+    case GLFW_KEY_COMMA:
+    case GLFW_KEY_PAGE_DOWN:
+        scene_set_ball_radius(app, app->ball_radius / (phys_real)1.10);
+        break;
+    case GLFW_KEY_PERIOD:
+    case GLFW_KEY_PAGE_UP:
+        scene_set_ball_radius(app, app->ball_radius * (phys_real)1.10);
         break;
     case GLFW_KEY_UP:
         app->time_scale *= (phys_real)1.25;
@@ -207,6 +228,7 @@ void input_init(App *app)
     glfwSetKeyCallback(app->window, on_key);
     glfwSetMouseButtonCallback(app->window, on_mouse_button);
     glfwSetCursorPosCallback(app->window, on_cursor_pos);
+    glfwSetScrollCallback(app->window, on_scroll);
 }
 
 void input_update_drag(App *app, double frame_dt)
