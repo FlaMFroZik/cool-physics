@@ -22,7 +22,10 @@
 #define WINDOW_W 1280
 #define WINDOW_H 720
 
-#define SIM_DT ((phys_real)1 / (phys_real)240) /* fixed physics timestep, s */
+#define BASE_TICK_DT        ((phys_real)1 / (phys_real)60) /* 60 Hz base tick, s */
+#define DEFAULT_SUBTICKS    4                              /* default sub-ticks per 60 Hz tick (240 Hz) */
+#define MAX_SUBTICKS        4096
+#define SIM_DT              (BASE_TICK_DT / (phys_real)DEFAULT_SUBTICKS)
 #define MAX_STEPS_PER_FRAME 64
 
 #if defined(SIM_CONSTANT)
@@ -36,7 +39,9 @@ typedef struct App {
     GLFWwindow *window;
 
     size_t    body_count;
-    phys_real ball_radius;     /* uniform ball radius for this scene */
+    size_t    subticks;        /* physics sub-ticks per 60 Hz base tick */
+    phys_real sub_dt;          /* BASE_TICK_DT / subticks               */
+    phys_real ball_radius;     /* uniform ball radius for this scene    */
     size_t    next_color_idx;  /* palette index for newly spawned balls */
 
     Rng       rng;
@@ -55,5 +60,15 @@ typedef struct App {
     double fps_clock;
     int    fps_frames;
 } App;
+
+static inline void app_set_subticks(App *app, size_t subticks)
+{
+    if (subticks < 1)
+        subticks = 1;
+    if (subticks > MAX_SUBTICKS)
+        subticks = MAX_SUBTICKS;
+    app->subticks = subticks;
+    app->sub_dt   = BASE_TICK_DT / (phys_real)subticks;
+}
 
 #endif /* APP_H */
